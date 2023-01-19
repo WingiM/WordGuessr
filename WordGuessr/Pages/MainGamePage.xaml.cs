@@ -94,8 +94,8 @@ public partial class MainGamePage : Page
     {
         for (int i = 0; i < _game.CurrentQuestion.Answer.Length; i++)
         {
-            if (i < _game.CurrentGuessTryWord.Length)
-                _currentWordLabels![i].Content = _game.CurrentGuessTryWord[i];
+            if (i < _game.CurrentTryWord.Length)
+                _currentWordLabels![i].Content = _game.CurrentTryWord[i];
             else
                 _currentWordLabels![i].Content = "";
         }
@@ -163,7 +163,7 @@ public partial class MainGamePage : Page
 
     private void UpdateHealthAndCount()
     {
-        CountRun.Text = _game.GuessedWords.ToString();
+        CountRun.Text = _game.GuessedWordsCount.ToString();
         HpRun.Text = _game.Health.ToString();
     }
 }

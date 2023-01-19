@@ -10,16 +10,16 @@ public class GameCore
 {
     private const int DefaultHealth = 3;
 
-    public int Health { get; private set; } = DefaultHealth;
-    public int GuessedWords { get; private set; }
     private readonly Question[] _questions;
     private int _currentQuestionIndex = -1;
-    private Stack<char> _currentGuessTry;
+    private Stack<char> _currentTryCharacters;
     private bool _isCurrentWordGuessed;
 
+    public int Health { get; private set; } = DefaultHealth;
+    public int GuessedWordsCount { get; private set; }
     public Question? CurrentQuestion { get; private set; }
     public Keyboard? CurrentWordKeyboard { get; private set; }
-    public string CurrentGuessTryWord => string.Concat(string.Concat(_currentGuessTry ?? new Stack<char>()).Reverse());
+    public string CurrentTryWord => string.Concat(_currentTryCharacters.Reverse());
 
     public GameCore()
     {
@@ -50,19 +50,23 @@ public class GameCore
             _currentQuestionIndex = 0;
             var rnd = new Random();
             rnd.Shuffle(_questions);
+            while (_questions[_currentQuestionIndex] == CurrentQuestion)
+            {
+                rnd.Shuffle(_questions);
+            }
         }
 
         CurrentQuestion = _questions[_currentQuestionIndex];
         CurrentWordKeyboard = new Keyboard(CurrentQuestion.Answer);
-        _currentGuessTry = new Stack<char>();
+        _currentTryCharacters = new Stack<char>();
         _isCurrentWordGuessed = false;
     }
 
     public bool GuessCharacter(char character)
     {
-        if (_currentGuessTry.Count == CurrentQuestion!.Answer.Length)
+        if (_currentTryCharacters.Count == CurrentQuestion!.Answer.Length)
             return false;
-        _currentGuessTry.Push(character);
+        _currentTryCharacters.Push(character);
         return true;
     }
 
@@ -70,7 +74,7 @@ public class GameCore
     {
         List<IsCorrectCharacter> corrects = new();
 
-        if (CurrentGuessTryWord.Length == 0)
+        if (CurrentTryWord.Length == 0)
         {
             Health--;
             if (Health == 0)
@@ -85,9 +89,9 @@ public class GameCore
                     .ToArray());
         }
 
-        if (CurrentGuessTryWord.Length < CurrentQuestion.Answer.Length)
+        if (CurrentTryWord.Length < CurrentQuestion.Answer.Length)
         {
-            for (int i = 0; i < CurrentGuessTryWord.Length; i++)
+            for (int i = 0; i < CurrentTryWord.Length; i++)
                 corrects.Add(IsCorrectCharacter.Neutral);
 
             while (corrects.Count != CurrentQuestion.Answer.Length)
@@ -97,9 +101,9 @@ public class GameCore
         }
 
         var correctAnswer = CurrentQuestion.Answer.ToUpper();
-        for (int i = 0; i < CurrentGuessTryWord.Length; i++)
+        for (int i = 0; i < CurrentTryWord.Length; i++)
         {
-            corrects.Add(CurrentGuessTryWord[i] == correctAnswer[i]
+            corrects.Add(CurrentTryWord[i] == correctAnswer[i]
                 ? IsCorrectCharacter.Correct
                 : IsCorrectCharacter.Incorrect);
         }
@@ -119,7 +123,7 @@ public class GameCore
         if (corrects.All(x => x == IsCorrectCharacter.Correct))
         {
             Health++;
-            GuessedWords++;
+            GuessedWordsCount++;
             _isCurrentWordGuessed = true;
             NextWord();
             return (true, corrects.ToArray());
@@ -130,13 +134,13 @@ public class GameCore
 
     public bool ResetCharacter()
     {
-        return _currentGuessTry.TryPop(out _);
+        return _currentTryCharacters.TryPop(out _);
     }
 
     private void ResetGame()
     {
         Health = DefaultHealth + 1;
-        GuessedWords = 0;
+        GuessedWordsCount = 0;
         NextWord();
     }
 }
