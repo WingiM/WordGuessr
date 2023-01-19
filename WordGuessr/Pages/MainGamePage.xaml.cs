@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using WordGuessr.Game;
+using WordGuessr.Game.Models;
 
 namespace WordGuessr.Pages;
 
@@ -79,7 +80,7 @@ public partial class MainGamePage : Page
             btn.Click += (sender, _) =>
             {
                 var button = (Button)sender;
-                if (!_game.GuessCharacter((char)button.Content)) return;
+                if (!_game.TypedWord!.InsertCharacter((char)button.Content)) return;
                 button.IsEnabled = false;
                 _inputHistory.Push(button);
                 FillWord();
@@ -92,10 +93,13 @@ public partial class MainGamePage : Page
 
     private void FillWord()
     {
+        if (_game.CurrentQuestion is null || _game.TypedWord is null)
+            return;
+
         for (int i = 0; i < _game.CurrentQuestion.Answer.Length; i++)
         {
-            if (i < _game.CurrentTryWord.Length)
-                _currentWordLabels![i].Content = _game.CurrentTryWord[i];
+            if (i < _game.TypedWord.Word.Length)
+                _currentWordLabels![i].Content = _game.TypedWord.Word[i];
             else
                 _currentWordLabels![i].Content = "";
         }
@@ -113,10 +117,13 @@ public partial class MainGamePage : Page
 
     private void ResetLastCharacterButton_Click(object sender, RoutedEventArgs e)
     {
+        if (_game.TypedWord is null)
+            return;
+
         if (!_inputHistory.TryPop(out var button)) return;
 
         button.IsEnabled = true;
-        _game.ResetCharacter();
+        _game.TypedWord.ResetCharacter();
         ResetColors();
         FillWord();
     }
@@ -142,7 +149,7 @@ public partial class MainGamePage : Page
 
     private void ColorLabels(IsCorrectCharacter[] status)
     {
-        for (int i = 0; i < _currentWordLabels.Count; i++)
+        for (int i = 0; i < _currentWordLabels!.Count; i++)
         {
             if (status[i] == IsCorrectCharacter.Correct)
                 _currentWordLabels[i].Background = Brushes.Green;
@@ -155,7 +162,7 @@ public partial class MainGamePage : Page
 
     private void ResetColors()
     {
-        foreach (var label in _currentWordLabels)
+        foreach (var label in _currentWordLabels!)
         {
             label.Background = Brushes.White;
         }

@@ -12,14 +12,12 @@ public class GameCore
 
     private readonly Question[] _questions;
     private int _currentQuestionIndex = -1;
-    private Stack<char> _currentTryCharacters;
-    private bool _isCurrentWordGuessed;
 
     public int Health { get; private set; } = DefaultHealth;
     public int GuessedWordsCount { get; private set; }
     public Question? CurrentQuestion { get; private set; }
     public Keyboard? CurrentWordKeyboard { get; private set; }
-    public string CurrentTryWord => string.Concat(_currentTryCharacters.Reverse());
+    public GuessedWord? TypedWord { get; private set; }
 
     public GameCore()
     {
@@ -34,7 +32,7 @@ public class GameCore
 
     public void NextWord()
     {
-        if (!_isCurrentWordGuessed && CurrentQuestion is not null)
+        if (TypedWord is not null && !TypedWord.IsGuessed && CurrentQuestion is not null)
             Health--;
 
         if (Health == 0)
@@ -44,7 +42,6 @@ public class GameCore
         }
 
         _currentQuestionIndex++;
-
         if (_currentQuestionIndex >= _questions.Length)
         {
             _currentQuestionIndex = 0;
@@ -58,40 +55,32 @@ public class GameCore
 
         CurrentQuestion = _questions[_currentQuestionIndex];
         CurrentWordKeyboard = new Keyboard(CurrentQuestion.Answer);
-        _currentTryCharacters = new Stack<char>();
-        _isCurrentWordGuessed = false;
+        TypedWord = new GuessedWord(CurrentQuestion.Answer.Length);
     }
 
-    public bool GuessCharacter(char character)
-    {
-        if (_currentTryCharacters.Count == CurrentQuestion!.Answer.Length)
-            return false;
-        _currentTryCharacters.Push(character);
-        return true;
-    }
 
     public (bool, IsCorrectCharacter[]) GuessWord()
     {
+        if (TypedWord is null || CurrentQuestion is null)
+            return (false, Array.Empty<IsCorrectCharacter>());
+
         List<IsCorrectCharacter> corrects = new();
 
-        if (CurrentTryWord.Length == 0)
+        if (TypedWord.Word.Length == 0)
         {
             Health--;
-            if (Health == 0)
-            {
-                ResetGame();
-                throw new Exception("Game ended");
-            }
-
-            return (false,
-                new IsCorrectCharacter[CurrentQuestion.Answer.Length]
-                    .Select(x => IsCorrectCharacter.Incorrect)
-                    .ToArray());
+            if (Health != 0)
+                return (false,
+                    new IsCorrectCharacter[CurrentQuestion.Answer.Length]
+                        .Select(x => IsCorrectCharacter.Incorrect)
+                        .ToArray());
+            ResetGame();
+            throw new Exception("Game ended");
         }
 
-        if (CurrentTryWord.Length < CurrentQuestion.Answer.Length)
+        if (TypedWord.Word.Length < CurrentQuestion.Answer.Length)
         {
-            for (int i = 0; i < CurrentTryWord.Length; i++)
+            for (int i = 0; i < TypedWord.Word.Length; i++)
                 corrects.Add(IsCorrectCharacter.Neutral);
 
             while (corrects.Count != CurrentQuestion.Answer.Length)
@@ -101,40 +90,24 @@ public class GameCore
         }
 
         var correctAnswer = CurrentQuestion.Answer.ToUpper();
-        for (int i = 0; i < CurrentTryWord.Length; i++)
-        {
-            corrects.Add(CurrentTryWord[i] == correctAnswer[i]
-                ? IsCorrectCharacter.Correct
-                : IsCorrectCharacter.Incorrect);
-        }
+        corrects.AddRange(TypedWord.Word.Select((t, i) => t == correctAnswer[i]
+            ? IsCorrectCharacter.Correct
+            : IsCorrectCharacter.Incorrect));
 
         if (corrects.All(x => x == IsCorrectCharacter.Incorrect))
         {
             Health--;
-            if (Health == 0)
-            {
-                ResetGame();
-                throw new Exception("Game ended");
-            }
-
-            return (false, corrects.ToArray());
+            if (Health != 0) return (false, corrects.ToArray());
+            ResetGame();
+            throw new Exception("Game ended");
         }
 
-        if (corrects.All(x => x == IsCorrectCharacter.Correct))
-        {
-            Health++;
-            GuessedWordsCount++;
-            _isCurrentWordGuessed = true;
-            NextWord();
-            return (true, corrects.ToArray());
-        }
-
-        return (false, corrects.ToArray());
-    }
-
-    public bool ResetCharacter()
-    {
-        return _currentTryCharacters.TryPop(out _);
+        if (corrects.Any(x => x != IsCorrectCharacter.Correct)) return (false, corrects.ToArray());
+        Health++;
+        GuessedWordsCount++;
+        TypedWord.IsGuessed = true;
+        NextWord();
+        return (true, corrects.ToArray());
     }
 
     private void ResetGame()

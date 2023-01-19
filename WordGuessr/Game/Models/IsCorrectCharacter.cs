@@ -1,4 +1,4 @@
-﻿namespace WordGuessr.Game;
+﻿namespace WordGuessr.Game.Models;
 
 public enum IsCorrectCharacter
 {
