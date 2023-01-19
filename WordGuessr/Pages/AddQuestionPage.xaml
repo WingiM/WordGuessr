@@ -1,0 +1,29 @@
+﻿<Page x:Class="WordGuessr.Pages.AddQuestionPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="clr-namespace:WordGuessr.Pages"
+      mc:Ignorable="d"
+      Title="AddQuestionPage" Height="450" Width="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition Width="3*" />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="3*" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="1" Grid.Column="1">
+            <Label Content="Вопрос:" />
+            <TextBox x:Name="QuestionTb" />
+            <Label Content="Ответ:" />
+            <TextBox x:Name="AnswerTb" />
+            <Button Margin="10" Content="Добавить вопрос" Click="AddQuestionButton_Click"/>
+        </StackPanel>
+        <Button Grid.Row="0" Grid.Column="0" Content="Go back" Click="GoBackButton_Click"/>
+    </Grid>
+</Page>
