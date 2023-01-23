@@ -31,14 +31,19 @@
                 <Run x:Name="CountRun"></Run>
             </TextBlock>
         </StackPanel>
+        <Button Grid.Row="0" Grid.Column="0" Height="30" Click="CreateNewQuestionButton_Click">
+            <Button.Content>
+                <TextBlock TextWrapping="Wrap" TextAlignment="Center">
+                    Создать новый вопрос
+                </TextBlock>
+            </Button.Content>
+        </Button>
         <StackPanel Grid.Column="0" Grid.Row="1" VerticalAlignment="Center">
-            <Button Click="CreateNewQuestionButton_Click">
-                <Button.Content>
-                    <TextBlock TextWrapping="Wrap" TextAlignment="Center">
-                        Создать новый вопрос
-                    </TextBlock>
-                </Button.Content>
-            </Button>
+            <StackPanel.Resources>
+                <Style TargetType="Button">
+                    <Setter Property="Height" Value="40"></Setter>
+                </Style>
+            </StackPanel.Resources>
             <Button Click="NextWordButton_Click">
                 <Button.Content>
                     <TextBlock TextWrapping="Wrap" TextAlignment="Center">
